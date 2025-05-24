@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1075037963688",
+    "project_id": "mapaincidentes",
+    "storage_bucket": "mapaincidentes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1075037963688:android:b105a45a3260aad11d099d",
+        "android_client_info": {
+          "package_name": "com.claudev.camia_live"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAA66-jZy4XBypNx-uuQ52EThGNfiMujAE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
