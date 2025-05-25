@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import '../services/location_service.dart';
-import '../services/livekit_service.dart';
-import '../services/status_service.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:seguridad_plus/services/livekit_service.dart';
+import 'package:seguridad_plus/services/location_service.dart';
+import 'package:seguridad_plus/services/status_service.dart';
 
 class StreamingController extends ChangeNotifier {
   final LocationService locationService;

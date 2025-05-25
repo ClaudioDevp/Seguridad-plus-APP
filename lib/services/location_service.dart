@@ -2,7 +2,7 @@
 
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import './firestore_service.dart';
+import 'package:seguridad_plus/services/firestore_service.dart';
 
 class LocationService {
   final FirestoreService firestoreService;

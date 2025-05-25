@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart'; // importa tu AuthService
+import 'package:seguridad_plus/services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   final AuthService authService;

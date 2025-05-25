@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import './emergency_options_page.dart';
-import '../controllers/streaming_controller.dart';
-import '../services/firestore_service.dart';
+import 'package:seguridad_plus/controllers/streaming_controller.dart';
+import 'package:seguridad_plus/pages/emergency_options_page.dart';
+import 'package:seguridad_plus/services/firestore_service.dart';
 
 class AlertPage extends StatefulWidget {
   const AlertPage({super.key});

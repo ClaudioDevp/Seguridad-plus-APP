@@ -2,15 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'controllers/streaming_controller.dart';
-import 'services/location_service.dart';
-import 'services/livekit_service.dart';
-import 'services/status_service.dart';
-import 'pages/alert_page.dart';
-import 'firebase_options.dart';
-import 'pages/login_page.dart';
-import 'services/auth_service.dart';
-import 'services/firestore_service.dart';
+import 'package:seguridad_plus/controllers/streaming_controller.dart';
+import 'package:seguridad_plus/firebase_options.dart';
+import 'package:seguridad_plus/pages/alert_page.dart';
+import 'package:seguridad_plus/pages/login_page.dart';
+import 'package:seguridad_plus/services/auth_service.dart';
+import 'package:seguridad_plus/services/firestore_service.dart';
+import 'package:seguridad_plus/services/livekit_service.dart';
+import 'package:seguridad_plus/services/location_service.dart';
+import 'package:seguridad_plus/services/status_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

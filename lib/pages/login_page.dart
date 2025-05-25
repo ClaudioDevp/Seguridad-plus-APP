@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth_service.dart'; // importa tu AuthService
-import './register_page.dart';
+import 'package:seguridad_plus/pages/register_page.dart';
+import 'package:seguridad_plus/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   final void Function(User) onLogin;
