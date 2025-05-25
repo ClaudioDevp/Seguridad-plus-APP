@@ -1,12 +1,13 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
+import './firestore_service.dart';
 
 class LocationService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirestoreService firestoreService;
   Timer? _timer;
+  LocationService({required this.firestoreService});
 
   Future<void> startSendingLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -29,16 +30,11 @@ class LocationService {
       return;
     }
 
-    // Empieza a enviar la ubicación cada 10 segundos
+    // Empieza a enviar la ubicación cada 15 segundos
     _timer = Timer.periodic(Duration(seconds: 15), (timer) async {
       try {
         Position position = await Geolocator.getCurrentPosition();
-        await _firestore.collection('ubicaciones').doc('usuario_1').set({
-          'latitud': position.latitude,
-          'longitud': position.longitude,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-
+        await firestoreService.saveUserLocation("usuario_1", position.latitude, position.longitude);
         print('Ubicación enviada: ${position.latitude}, ${position.longitude}');
       } catch (e) {
         print('Error al obtener ubicación: $e');

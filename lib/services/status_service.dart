@@ -8,11 +8,13 @@ class StatusService {
   Future<void> checkAndSendStatus(String userId) async {
     final ubicacionActiva = await _isLocationEnabled();
     final internetActivo = await _hasInternet();
+    final alertaActiva = await _hasActiveAlert();
 
     final data = {
       'ubicacion_activada': ubicacionActiva,
       'conectado_internet': internetActivo,
       'ultima_actualizacion': DateTime.now(),
+      'alerta_activa': alertaActiva,
     };
 
     await _firestore.collection('estado_usuarios').doc(userId).set(data);
@@ -23,6 +25,10 @@ class StatusService {
   }
 
   Future<bool> _hasInternet() async {
+    final result = await Connectivity().checkConnectivity();
+    return result != ConnectivityResult.none;
+  }
+  Future<bool> _hasActiveAlert() async {
     final result = await Connectivity().checkConnectivity();
     return result != ConnectivityResult.none;
   }

@@ -1,117 +1,70 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:provider/provider.dart';
+import 'controllers/streaming_controller.dart';
+import 'services/location_service.dart';
+import 'services/livekit_service.dart';
+import 'services/status_service.dart';
+import 'pages/alert_page.dart';
 import 'firebase_options.dart';
-import 'location_service.dart';
-import 'livekit_service.dart';
-import 'status_service.dart'; // Nuevo import para el chequeo de estado
-import 'dart:async'; // Para el Timer
-import 'package:livekit_client/livekit_client.dart';
+import 'pages/login_page.dart';
+import 'services/auth_service.dart';
+import 'services/firestore_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: AuthWrapper(),
+  ));
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
 
-class _MyAppState extends State<MyApp> {
-  final LocationService _locationService = LocationService();
-  final LiveKitService _liveKitService = LiveKitService();
-  final StatusService _statusService = StatusService(); // Instancia del servicio de estado
 
-  final RTCVideoRenderer _renderer = RTCVideoRenderer();
-  bool _isStreaming = false;
+class AuthWrapper extends StatelessWidget {
+  AuthWrapper({super.key});
 
-  Timer? _statusTimer; // Timer para enviar estado cada 5 seg
-  final String _userId = 'usuario1'; // Puedes reemplazar con UID real si usas Firebase Auth
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeRenderer();
-    _locationService.startSendingLocation();
-
-    // Enviar estado al iniciar
-    _statusService.checkAndSendStatus(_userId);
-
-    // Enviar estado cada 5 segundos
-    _statusTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _statusService.checkAndSendStatus(_userId);
-    });
-  }
-
-  Future<void> _initializeRenderer() async {
-    await _renderer.initialize();
-  }
-
-  Future<void> _startStreaming() async {
-    final track = await _liveKitService.connectAndPublish();
-    if (track is LocalVideoTrack) {
-      final mediaStream = await createLocalMediaStream('local');
-      mediaStream.addTrack(track.mediaStreamTrack);
-      _renderer.srcObject = mediaStream;
-
-      setState(() {
-        _isStreaming = true;
-      });
-    }
-  }
-
-  Future<void> _stopStreaming() async {
-    await _liveKitService.disconnect();
-    _renderer.srcObject = null;
-
-    setState(() {
-      _isStreaming = false;
-    });
-  }
-
-  @override
-  void dispose() {
-    _renderer.dispose();
-    _locationService.stopSendingLocation();
-    _liveKitService.disconnect();
-    _statusTimer?.cancel(); // Cancelar el timer al salir
-    super.dispose();
-  }
+  final AuthService _authService = AuthService( firestoreService: FirestoreService());
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Seguridad Pública')),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('📡 Enviando ubicación...'),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isStreaming ? _stopStreaming : _startStreaming,
-                child: Text(_isStreaming ? 'Detener Stream' : 'Iniciar Stream'),
+    return StreamBuilder<User?>(
+      stream: _authService.userChanges,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+
+        if (snapshot.hasData && snapshot.data != null) {
+          final user = snapshot.data!;
+          return MultiProvider(
+            providers: [
+              ChangeNotifierProvider(
+                create: (_) => StreamingController(
+                  locationService: LocationService(firestoreService: FirestoreService()),
+                  liveKitService: LiveKitService(),
+                  statusService: StatusService(),
+                  userId: user.uid,
+                )..init(),
               ),
-              const SizedBox(height: 20),
-              _isStreaming && _renderer.srcObject != null
-                  ? SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.9, // 90% del ancho de pantalla
-                      height: MediaQuery.of(context).size.height * 0.6, // 60% del alto de pantalla
-                      child: RTCVideoView(_renderer),
-                    )
-                  : const Text('🎥 Stream no iniciado'),
             ],
-          ),
-        ),
-      ),
+            child: const AlertPage(),
+          );
+        } else {
+          return LoginPage(
+            authService: _authService,
+            onLogin: (user) {
+              // El StreamBuilder reaccionará automáticamente, no hace falta hacer nada aquí
+            },
+          );
+        }
+      },
     );
   }
 }
