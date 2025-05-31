@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:seguridad_plus/pages/register_page.dart';
-import 'package:seguridad_plus/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:seguridad_plus/providers/auth_notifier_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const REGISTER_URL = "https://seguridadplus.web.app/app/register";
 
 class LoginPage extends StatefulWidget {
-  final void Function(User) onLogin;
-  final AuthService authService;
-
-  const LoginPage({
-    super.key,
-    required this.onLogin,
-    required this.authService,
-  });
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -24,31 +19,38 @@ class _LoginPageState extends State<LoginPage> {
   String? _error;
 
   Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final user = await widget.authService.signIn(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      if (user != null) widget.onLogin(user);
-    } catch (e) {
+  if (!mounted) return; // evita correr si ya se desmontó
+
+  setState(() {
+    _isLoading = true;
+    _error = null;
+  });
+
+  try {
+    await context.read<AuthNotifierProvider>().signIn(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+  } catch (e) {
+    if (mounted) {
       setState(() {
         _error = e.toString();
       });
-    } finally {
+    }
+  } finally {
+    if (mounted) {
       setState(() {
         _isLoading = false;
       });
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Iniciar sesión')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -71,15 +73,20 @@ class _LoginPageState extends State<LoginPage> {
             else ...[
               ElevatedButton(onPressed: _login, child: const Text('Ingresar')),
               TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              RegisterPage(authService: widget.authService),
-                    ),
-                  );
+                onPressed: () async {
+                  final Uri url = Uri.parse(REGISTER_URL);
+
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'No se pudo abrir el navegador, ingresa a $REGISTER_URL para registrarte ',
+                        ),
+                      ),
+                    );
+                  }
                 },
                 child: const Text('Crear cuenta'),
               ),

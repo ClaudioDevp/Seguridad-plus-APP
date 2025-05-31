@@ -1,4 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:seguridad_plus/pages/videochat_page.dart';
+import 'package:seguridad_plus/services/firestore_service.dart';
 
 class EmergencyOptionsPage extends StatefulWidget {
   const EmergencyOptionsPage({super.key});
@@ -10,6 +14,9 @@ class EmergencyOptionsPage extends StatefulWidget {
 class _EmergencyOptionsPageState extends State<EmergencyOptionsPage>
     with TickerProviderStateMixin {
   late AnimationController _rippleController;
+  bool _loading = false;
+  
+  static const String liveKitUrl = "wss://claudev-09yjawm8.livekit.cloud";
 
   @override
   void initState() {
@@ -24,6 +31,42 @@ class _EmergencyOptionsPageState extends State<EmergencyOptionsPage>
   void dispose() {
     _rippleController.dispose();
     super.dispose();
+  }
+
+  Future<void> _startVideoChat() async {
+    setState(() => _loading = true);
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable('createCallRoom');
+      // Cambia este número al id real del municipio
+      final municipalityId = 1;
+
+      final result = await callable.call(<String, dynamic>{
+        'municipalityId': municipalityId,
+      });
+
+      final data = Map<String, dynamic>.from(result.data);
+      final token = data['token'] as String;
+      final roomName = data['roomName'] as String;
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      await FirestoreService().linkRoomName(userId!, roomName);
+
+
+      if (!mounted) return;
+
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => VideoChatPage(
+          token: token,
+          url: liveKitUrl,
+          roomName: roomName,
+        ),
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al iniciar videochat: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -48,14 +91,14 @@ class _EmergencyOptionsPageState extends State<EmergencyOptionsPage>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildAlertButton(
-                  label: 'Iniciar Videochat',
-                  icon: Icons.videocam,
-                  color: Colors.orange,
-                  onPressed: () {
-                    // TODO: Ir a página de videochat
-                  },
-                ),
+                _loading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : _buildAlertButton(
+                        label: 'Iniciar Videochat',
+                        icon: Icons.videocam,
+                        color: Colors.orange,
+                        onPressed: _startVideoChat,
+                      ),
                 const SizedBox(height: 30),
                 _buildAlertButton(
                   label: 'Iniciar Chat de Texto',

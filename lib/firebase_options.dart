@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -36,10 +33,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -59,4 +53,25 @@ class DefaultFirebaseOptions {
     projectId: 'mapaincidentes',
     storageBucket: 'mapaincidentes.firebasestorage.app',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyASaj3lGo9TQtEpBXX7KyksxtzSvBzZSwU',
+    appId: '1:1075037963688:web:85b3cd531f8dbb011d099d',
+    messagingSenderId: '1075037963688',
+    projectId: 'mapaincidentes',
+    authDomain: 'mapaincidentes.firebaseapp.com',
+    storageBucket: 'mapaincidentes.firebasestorage.app',
+    measurementId: 'G-L58BSJBGSD',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyASaj3lGo9TQtEpBXX7KyksxtzSvBzZSwU',
+    appId: '1:1075037963688:web:f6344cd067ba87e41d099d',
+    messagingSenderId: '1075037963688',
+    projectId: 'mapaincidentes',
+    authDomain: 'mapaincidentes.firebaseapp.com',
+    storageBucket: 'mapaincidentes.firebasestorage.app',
+    measurementId: 'G-VGQ0S0HH45',
+  );
+
 }

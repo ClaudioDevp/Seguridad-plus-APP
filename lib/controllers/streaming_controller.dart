@@ -10,11 +10,14 @@ class StreamingController extends ChangeNotifier {
   final LocationService locationService;
   final LiveKitService liveKitService;
   final StatusService statusService;
+  final String userId;
 
-  RTCVideoRenderer renderer = RTCVideoRenderer();
+  RTCVideoRenderer localRenderer = RTCVideoRenderer();
+  Map<String, RTCVideoRenderer> remoteRenderers = {};
+
   bool isStreaming = false;
   Timer? _statusTimer;
-  final String userId;
+  CancelListenFunc? _eventCancelFunc;
 
   StreamingController({
     required this.locationService,
@@ -24,9 +27,37 @@ class StreamingController extends ChangeNotifier {
   });
 
   Future<void> init() async {
-    await renderer.initialize();
-    locationService.startSendingLocation();
+    await localRenderer.initialize();
+    // locationService.startSendingLocation();
     _startStatusTimer();
+
+    // Escuchar eventos de la sala
+    _eventCancelFunc = liveKitService.room.events.listen((event) {
+      if (event is TrackSubscribedEvent) {
+        _handleTrackSubscribed(event);
+      } else if (event is ParticipantDisconnectedEvent) {
+        _handleParticipantDisconnected(event);
+      }
+    });
+  }
+
+  void _handleTrackSubscribed(TrackSubscribedEvent event) async {
+    final participant = event.participant;
+    final track = event.track;
+    if (track is RemoteVideoTrack) {
+      final renderer = RTCVideoRenderer();
+      await renderer.initialize();
+      renderer.srcObject = track.mediaStream;
+      remoteRenderers[participant.sid] = renderer;
+      notifyListeners();
+    }
+  }
+
+  void _handleParticipantDisconnected(ParticipantDisconnectedEvent event) {
+    final participant = event.participant;
+    final renderer = remoteRenderers.remove(participant.sid);
+    renderer?.dispose();
+    notifyListeners();
   }
 
   void _startStatusTimer() {
@@ -35,12 +66,12 @@ class StreamingController extends ChangeNotifier {
     });
   }
 
-  Future<void> startStreaming() async {
-    final track = await liveKitService.connectAndPublish();
-    if (track is LocalVideoTrack) {
+  Future<void> startStreaming(String token) async {
+    final track = await liveKitService.connectAndPublish(token);
+    if (track != null) {
       final mediaStream = await createLocalMediaStream('local');
       mediaStream.addTrack(track.mediaStreamTrack);
-      renderer.srcObject = mediaStream;
+      localRenderer.srcObject = mediaStream;
       isStreaming = true;
       notifyListeners();
     }
@@ -48,14 +79,20 @@ class StreamingController extends ChangeNotifier {
 
   Future<void> stopStreaming() async {
     await liveKitService.disconnect();
-    renderer.srcObject = null;
+    localRenderer.srcObject = null;
     isStreaming = false;
+
+    // Dispose remotos
+    remoteRenderers.forEach((_, r) => r.dispose());
+    remoteRenderers.clear();
+
     notifyListeners();
-    await renderer.dispose();
   }
 
+  @override
   void dispose() {
-    renderer.dispose();
+    _eventCancelFunc?.call(); // cancelar la escucha correctamente
+    localRenderer.dispose();
     locationService.stopSendingLocation();
     liveKitService.disconnect();
     _statusTimer?.cancel();
