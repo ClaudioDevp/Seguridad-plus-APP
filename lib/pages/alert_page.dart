@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:seguridad_plus/controllers/streaming_controller.dart';
-import 'package:seguridad_plus/pages/emergency_options_page.dart';
-import 'package:seguridad_plus/providers/auth_notifier_provider.dart';
-import 'package:seguridad_plus/providers/firebase_provider.dart';
-import 'package:seguridad_plus/services/firestore_service.dart';
+import 'package:seguridad_plus/pages/emergency_options_dialog.dart';
+
+import '../providers/location_provider.dart';
 
 class AlertPage extends StatefulWidget {
   const AlertPage({super.key});
@@ -21,6 +19,8 @@ class _AlertPageState extends State<AlertPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final locationProvider = context.read<LocationProvider>();
+    locationProvider.startSendingLocation();
     return Scaffold(
       body: Stack(
         children: [
@@ -43,32 +43,15 @@ class _AlertPageState extends State<AlertPage> with TickerProviderStateMixin {
               ),
               onPressed: () async {
                 try {
-                  final auth = context.read<AuthNotifierProvider>();
-                  final db = context.read<FirestoreProvider>();
-                  print("user: ${auth.user}");
-                  print("Ahora vamos a emitir la alerta");
-
-                  await db.emitirAlerta(auth.user!.uid);
-
-                  print("Alerta emitida");
-
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EmergencyOptionsPage(),
-                    ),
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => EmergencyOptionsDialog(),
                   );
-                } catch (e, st) {
-                  print("Error al emitir la alerta: $e");
-                  print("Stacktrace: $st");
-
-                  // Opcional: mostrar mensaje visual
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al emitir alerta: $e')),
-                  );
+                } catch (e) {
+                  print("❌ Error al emitir alerta: $e");
                 }
               },
-
               child: const Text('SOS'),
             ),
           ),

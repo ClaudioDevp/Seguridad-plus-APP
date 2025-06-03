@@ -6,6 +6,8 @@ import 'package:seguridad_plus/pages/alert_page.dart';
 import 'package:seguridad_plus/pages/login_page.dart';
 import 'package:seguridad_plus/providers/auth_notifier_provider.dart';
 import 'package:seguridad_plus/providers/firebase_provider.dart';
+import 'package:seguridad_plus/providers/livekit_provider.dart';
+import 'package:seguridad_plus/providers/location_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +21,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthNotifierProvider()),
         ChangeNotifierProvider(create: (_) => FirestoreProvider()),
+        ChangeNotifierProvider(create: (_) => LivekitProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
+
       ],
       child: const MyApp(),
     ),
