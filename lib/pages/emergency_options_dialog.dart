@@ -19,10 +19,21 @@ class EmergencyOptionsDialog extends StatefulWidget {
 class _EmergencyOptionsDialogState extends State<EmergencyOptionsDialog> {
   bool _loading = false;
   Timer? _autoTriggerTimer;
+  Timer? _countdownTimer;
+  int _countdown = 10;
 
   @override
   void initState() {
     super.initState();
+    // Iniciar countdown
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_countdown == 1) {
+        timer.cancel();
+      }
+      setState(() {
+        _countdown--;
+      });
+    });
     // Espera 10 segundos, si el usuario no interactúa, inicia la videollamada
     _autoTriggerTimer = Timer(const Duration(seconds: 10), () {
       if (mounted && !_loading) {
@@ -34,6 +45,7 @@ class _EmergencyOptionsDialogState extends State<EmergencyOptionsDialog> {
   @override
   void dispose() {
     _autoTriggerTimer?.cancel();
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -88,6 +100,13 @@ class _EmergencyOptionsDialogState extends State<EmergencyOptionsDialog> {
             const Text(
               "¿Qué tipo de emergencia es?",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            // 👇 Cuenta regresiva visible
+            Text(
+              "Seleccionando videollamada en ${_countdown}s...",
+              style: const TextStyle(fontSize: 16, color: Colors.redAccent),
             ),
             const SizedBox(height: 20),
             if (_loading)
